@@ -1,0 +1,12 @@
+<view class="home">
+  <view class="home-top"><text class="brand">小猫拌饭</text><button class="privacy" hover-class="pressed" bindtap="showPrivacy">隐私说明</button></view>
+  <view class="title">工具箱</view><view class="subtitle">让素材处理，简单一点。</view>
+  <view class="section-label">图片与动图</view>
+  <view class="tools"><button wx:for="{{availableTools}}" wx:key="id" class="tool-row" hover-class="pressed" data-id="{{item.id}}" bindtap="openTool" disabled="{{navigating}}">
+    <view class="format">{{item.format}}</view>
+    <view class="tool-copy"><view class="tool-title">{{item.title}}</view><view class="tool-note">{{item.note}}</view></view><text class="chevron">›</text>
+  </button></view>
+  <view class="local-note">选择素材，自动处理，再用画笔修整。<view>照片与 GIF 留在你的设备，不上传服务器。</view></view>
+  <view class="more"><tool-drawer full-width disabled="{{navigating}}"/><view class="more-note">更多功能入口，都收在这里。</view></view>
+  <view class="footer">为自己与朋友准备的小工具。</view>
+</view>

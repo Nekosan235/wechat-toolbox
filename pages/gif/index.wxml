@@ -1,0 +1,115 @@
+<view class="page">
+  <view class="toolbar">
+    <view class="toolbar-title">GIF 逐帧编辑</view>
+    <tool-drawer active-tool="gif" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}" bindvisibilitychange="onDrawerChange"/>
+  </view>
+  <view class="intro">
+    <view class="heading">GIF 去白底</view>
+    <view class="subtitle">去掉白底，逐帧修整，保留动画。</view>
+    <view class="privacy-note"><view class="privacy-dot"></view>本机处理，素材不上传</view>
+  </view>
+
+  <view class="section-caption">素材</view>
+  <view class="card source-card">
+    <view class="source-summary">
+      <view class="format-symbol">GIF</view>
+      <view class="source-copy">
+        <view class="section-title">{{loaded ? '已载入动画' : '从聊天文件中选择'}}</view>
+        <view class="meta source-meta">{{loaded ? imageSize : '使用原始 GIF 文件，保留完整帧'}}</view>
+      </view>
+    </view>
+    <view class="row source-actions">
+      <button class="primary" hover-class="primary-pressed" bindtap="chooseGif" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}" loading="{{busy}}">{{loaded ? '更换 GIF' : '选择 GIF 文件'}}</button>
+      <button class="secondary" hover-class="button-pressed" bindtap="useExample" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}">试试示例</button>
+    </view>
+  </view>
+  <view class="hint section-note">先将 GIF 作为「文件」发送给文件传输助手，再从聊天文件中选择。表情或图片消息可能改变原文件。</view>
+
+  <view wx:if="{{loaded}}" class="section-caption">预览与选帧</view>
+  <view wx:if="{{loaded}}" class="card preview-card">
+    <view class="segments">
+      <button class="segment {{previewMode === 'result' ? 'selected' : ''}}" hover-class="segment-pressed" data-mode="result" bindtap="switchPreview" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}">处理效果</button>
+      <button class="segment {{previewMode === 'original' ? 'selected' : ''}}" hover-class="segment-pressed" data-mode="original" bindtap="switchPreview" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}">原始帧</button>
+    </view>
+    <view class="preview {{previewBackground}}">
+      <canvas id="gif-canvas" type="2d" disable-scroll="{{previewMode === 'result'}}" style="width:{{previewWidth}};height:{{previewHeight}}px" bindtouchstart="touchStart" bindtouchmove="touchMove" bindtouchend="touchEnd" bindtouchcancel="touchCancel"></canvas>
+    </view>
+    <view class="row swatches">
+      <button class="background-button {{previewBackground === 'checker' ? 'background-selected' : ''}}" hover-class="button-pressed" data-background="checker" bindtap="switchBackground"><view class="swatch-dot checker"></view>透明格</button>
+      <button class="background-button {{previewBackground === 'light' ? 'background-selected' : ''}}" hover-class="button-pressed" data-background="light" bindtap="switchBackground"><view class="swatch-dot light"></view>浅色</button>
+      <button class="background-button {{previewBackground === 'dark' ? 'background-selected' : ''}}" hover-class="button-pressed" data-background="dark" bindtap="switchBackground"><view class="swatch-dot dark"></view>深色</button>
+    </view>
+    <view class="frame-summary">
+      <view class="label">第 {{frameNumber}} <text class="secondary-text">/ {{frameCount}} 帧</text></view>
+      <view class="meta">原延时 {{delayMs}} ms</view>
+    </view>
+    <slider class="slider" min="0" max="{{frameMax || 1}}" value="{{frameIndex}}" step="1" bindchange="changeFrame" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving || frameCount === 1}}" activeColor="#0064D9" backgroundColor="#E5E5EA" block-color="#FFFFFF" block-size="24"/>
+    <view class="row playback-actions">
+      <button class="secondary" hover-class="button-pressed" bindtap="previousFrame" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving || frameIndex === 0}}">上一帧</button>
+      <button class="secondary play-button" hover-class="button-pressed" bindtap="togglePlay" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}">{{playing ? '暂停' : '播放'}}</button>
+      <button class="secondary" hover-class="button-pressed" bindtap="nextFrame" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving || frameIndex === frameMax}}">下一帧</button>
+    </view>
+  </view>
+
+  <view wx:if="{{loaded}}" class="section-caption">自动去白底</view>
+  <view wx:if="{{loaded}}" class="card settings-card">
+    <view class="setting-heading"><view class="label">去白底强度</view><view class="value">{{tolerance}}</view></view>
+    <slider class="slider" min="5" max="80" value="{{tolerance}}" bindchange="changeTolerance" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}" activeColor="#0064D9" backgroundColor="#E5E5EA" block-color="#FFFFFF" block-size="24"/>
+    <view class="slider-labels"><text>保留更多细节</text><text>去除更多白色</text></view>
+    <view class="setting-row">
+      <view class="setting-copy"><view class="label">全图去白</view><view class="hint">同时去除主体内部的白色</view></view>
+      <switch checked="{{mode === 'all'}}" bindchange="changeMode" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}" color="#34C759"/>
+    </view>
+  </view>
+
+  <view wx:if="{{loaded}}" class="section-caption">修整当前帧</view>
+  <view wx:if="{{loaded}}" class="card editor-card">
+    <view class="segments">
+      <button class="segment {{tool === 'erase' ? 'selected' : ''}}" hover-class="segment-pressed" data-tool="erase" bindtap="setTool" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}">擦除</button>
+      <button class="segment {{tool === 'restore' ? 'selected' : ''}}" hover-class="segment-pressed" data-tool="restore" bindtap="setTool" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}">还原</button>
+    </view>
+    <view class="zoom-actions">
+      <button class="secondary" hover-class="button-pressed" data-delta="-1" bindtap="changeZoom" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving || zoom === 1 || previewMode !== 'result'}}">缩小</button>
+      <text class="zoom-value">{{zoom}}×</text>
+      <button class="secondary" hover-class="button-pressed" data-delta="1" bindtap="changeZoom" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving || zoom === 8 || previewMode !== 'result'}}">放大</button>
+      <button class="secondary" hover-class="button-pressed" bindtap="resetView" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}">适应</button>
+    </view>
+    <view class="segments extra-tools">
+      <button class="segment {{tool === 'paint' ? 'selected' : ''}}" hover-class="segment-pressed" data-tool="paint" bindtap="setTool" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}">画笔</button>
+      <button class="segment {{tool === 'picker' ? 'selected' : ''}}" hover-class="segment-pressed" data-tool="picker" bindtap="setTool" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}">取色器</button>
+      <button class="segment {{tool === 'move' ? 'selected' : ''}}" hover-class="segment-pressed" data-tool="move" bindtap="setTool" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}">移动</button>
+    </view>
+    <view class="paint-color"><view class="color-chip" style="background:{{brushColor}}"></view><text>画笔颜色 {{brushColor}}</text></view>
+    <view class="hint editor-note">放大后选「移动」拖动画面。选「取色器」点击附近颜色，再用画笔覆盖；只修改当前帧，支持撤销。</view>
+    <view class="setting-heading brush-heading"><view class="label">笔刷半径</view><view class="value">{{radius}} <text class="value-unit">px</text></view></view>
+    <slider class="slider" min="1" max="40" value="{{radius}}" bindchange="changeRadius" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}" activeColor="#0064D9" backgroundColor="#E5E5EA" block-color="#FFFFFF" block-size="24"/>
+    <button class="secondary undo-button" hover-class="button-pressed" bindtap="undo" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving || !undoCount}}">撤销本帧上一笔（{{undoCount}}）</button>
+    <view class="hint">已修改 {{editedCount}} 帧。缩放不改变导出尺寸。画笔适合纯色修补，不会自动恢复被水印遮住的纹理。</view>
+  </view>
+
+  <view class="status"><view class="status-dot {{generating || busy ? 'working' : ''}}"></view><view>{{statusText}}</view></view>
+  <view wx:if="{{errorText}}" class="error">{{errorText}}</view>
+
+  <view wx:if="{{loaded}}" class="section-caption">导出动画</view>
+  <view wx:if="{{loaded}}" class="card export-card">
+    <button class="primary" hover-class="primary-pressed" bindtap="generate" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}" loading="{{generating}}">{{outputPath ? '重新生成透明 GIF' : '生成透明 GIF'}}</button>
+    <view wx:if="{{generating}}" class="generation-progress">
+      <progress percent="{{progress}}" show-info stroke-width="4" activeColor="#0064D9" backgroundColor="#E5E5EA"/>
+      <button class="secondary cancel-button" hover-class="button-pressed" bindtap="cancelGeneration">取消生成</button>
+    </view>
+    <view wx:if="{{outputPath}}" class="output-group">
+      <view class="output-preview checker"><image class="output" src="{{outputPath}}" mode="aspectFit"/></view>
+      <button class="primary share-button" hover-class="primary-pressed" bindtap="shareGif" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}">发送 GIF 文件</button>
+      <button class="secondary album-button" hover-class="button-pressed" bindtap="saveGif" disabled="{{busy || generating || sharing || drawerOpen || drawing || viewMoving}}">尝试保存到相册</button>
+      <view class="hint">发送文件可保留动画。相册是否保留动画因手机而异，保存后请检查结果。</view>
+    </view>
+    <button wx:if="{{needsAlbumPermission}}" class="secondary permission-button" hover-class="button-pressed" open-type="openSetting" bindopensetting="onAlbumSetting">开启相册权限</button>
+  </view>
+
+  <view class="footer">
+    <view>输入 ≤8 MB · ≤1024×1024 · ≤60 帧 · ≤15 秒</view>
+    <view>总像素 ≤3200 万，输出长边最多 480 像素。</view>
+    <view class="footer-detail">GIF 仅支持全透明或不透明，半透明边缘会被简化。请仅处理自己有权编辑的素材。</view>
+  </view>
+</view>
+<canvas id="gif-source-canvas" type="2d" class="processing-canvas"></canvas>

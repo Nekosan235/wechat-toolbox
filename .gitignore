@@ -1,0 +1,28 @@
+# Local WeChat identity and developer preferences; use the example config instead.
+/project.config.json
+/project.private.config.json
+/project.*.private.config.json
+
+# Credentials and local environment.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Dependencies, build output, editor metadata, and generated media.
+node_modules/
+miniprogram_npm/
+coverage/
+dist/
+.omx/
+.codex/
+.vscode/
+.idea/
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+toolbox-layout-*/

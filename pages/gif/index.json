@@ -1,0 +1,4 @@
+{
+  "navigationBarTitleText": "GIF 去白底与逐帧编辑",
+  "usingComponents": { "tool-drawer": "/components/tool-drawer/index" }
+}

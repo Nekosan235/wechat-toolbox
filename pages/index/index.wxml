@@ -1,0 +1,89 @@
+<view class="page">
+  <view class="page-header">
+    <view class="header-row">
+      <view class="page-title">图片去白底</view>
+      <tool-drawer active-tool="image" disabled="{{isLoading || isSaving || isDrawing || isPanning}}" bindvisibilitychange="onDrawerChange" />
+    </view>
+    <view class="page-subtitle">自动去白 · 手动修整 · 透明 PNG</view>
+  </view>
+
+  <view class="preview-card">
+    <view class="preview-toolbar">
+      <text class="section-title">{{originalPath ? '图片预览' : '选择图片'}}</text>
+      <view class="preview-tabs" wx:if="{{originalPath}}">
+        <button class="tab {{previewMode === 'original' ? 'active' : ''}}" data-mode="original" bindtap="switchPreview" disabled="{{drawerOpen || isLoading || isSaving || isDrawing || isPanning}}">原图</button>
+        <button class="tab {{previewMode === 'result' ? 'active' : ''}}" data-mode="result" bindtap="switchPreview" disabled="{{drawerOpen || isLoading || isSaving || isDrawing || isPanning}}">效果</button>
+      </view>
+      <text class="format-badge" wx:else>PNG</text>
+    </view>
+    <view wx:if="{{!originalPath}}" class="empty-preview" bindtap="chooseImage">
+      <view class="upload-symbol">＋</view>
+      <view class="empty-title">添加一张白底图片</view>
+      <view class="empty-note">JPG / PNG / WebP，最大 10 MB</view>
+      <button class="choose-first" loading="{{isLoading}}" disabled="{{isLoading}}" catchtap="chooseImage">选择图片</button>
+    </view>
+    <view wx:else class="image-preview {{previewMode === 'result' ? 'background-' + previewBackground : 'background-original'}}">
+      <image wx:if="{{previewMode === 'original'}}" class="preview-image original-preview" mode="aspectFit" src="{{originalPath}}" bindtap="previewImage" />
+      <canvas type="2d" id="editor-canvas" class="editor-canvas" hidden="{{previewMode === 'original' || !hasEditable}}" bindtouchstart="onBrushStart" catchtouchmove="onBrushMove" bindtouchend="onBrushEnd" bindtouchcancel="onBrushEnd"></canvas>
+      <view wx:if="{{previewMode === 'result' && !hasEditable}}" class="processing-placeholder">{{isLoading ? '正在生成透明图片…' : '处理未完成，请调整强度重试'}}</view>
+      <view class="image-dimensions">{{imageSize}}</view>
+    </view>
+    <view wx:if="{{hasEditable}}" class="zoom-controls">
+      <button class="zoom-button" data-step="-1" bindtap="changeZoom" aria-label="缩小预览" disabled="{{zoom <= 1 || previewMode === 'original' || drawerOpen || isLoading || isSaving || isDrawing || isPanning}}">－</button>
+      <text class="zoom-level">{{zoom}}×</text>
+      <button class="zoom-button" data-step="1" bindtap="changeZoom" aria-label="放大预览" disabled="{{zoom >= 8 || previewMode === 'original' || drawerOpen || isLoading || isSaving || isDrawing || isPanning}}">＋</button>
+      <button class="zoom-fit" bindtap="fitPreview" disabled="{{previewMode === 'original' || drawerOpen || isLoading || isSaving || isDrawing || isPanning}}">适应</button>
+    </view>
+    <view class="preview-footer">
+      <text class="preview-note">{{originalPath ? '棋盘格表示透明，不会出现在导出图片中。' : '默认保留主体内部封闭区域的白色。'}}</text>
+      <button wx:if="{{!originalPath}}" class="example-button" disabled="{{isLoading}}" bindtap="useExample">试用示例</button>
+    </view>
+    <view class="background-options" wx:if="{{originalPath}}">
+      <text>预览背景</text>
+      <button class="swatch {{previewBackground === 'checker' ? 'selected' : ''}}" data-background="checker" bindtap="switchBackground" aria-label="透明棋盘格"><view class="swatch-color checker-swatch"></view></button>
+      <button class="swatch {{previewBackground === 'dark' ? 'selected' : ''}}" data-background="dark" bindtap="switchBackground" aria-label="深色预览背景"><view class="swatch-color dark-swatch"></view></button>
+      <button class="swatch {{previewBackground === 'mint' ? 'selected' : ''}}" data-background="mint" bindtap="switchBackground" aria-label="浅绿色预览背景"><view class="swatch-color mint-swatch"></view></button>
+      <text class="background-hint">仅预览</text>
+    </view>
+  </view>
+
+  <view wx:if="{{hasEditable}}" class="settings-card brush-card">
+    <view class="setting-heading"><text class="section-title">手动修整</text><text class="brush-count">{{strokeCount}} / 100 笔</text></view>
+    <view class="brush-tools">
+      <button class="brush-tool {{brushTool === 'erase' ? 'brush-active' : ''}}" data-tool="erase" bindtap="changeBrushTool" disabled="{{drawerOpen || isLoading || isSaving || isDrawing || isPanning}}">擦除</button>
+      <button class="brush-tool {{brushTool === 'restore' ? 'brush-active' : ''}}" data-tool="restore" bindtap="changeBrushTool" disabled="{{drawerOpen || isLoading || isSaving || isDrawing || isPanning}}">还原</button>
+      <button class="brush-tool {{brushTool === 'paint' ? 'brush-active' : ''}}" data-tool="paint" bindtap="changeBrushTool" disabled="{{drawerOpen || isLoading || isSaving || isDrawing || isPanning}}">画笔</button>
+      <button class="brush-tool {{brushTool === 'picker' ? 'brush-active' : ''}}" data-tool="picker" bindtap="changeBrushTool" disabled="{{drawerOpen || isLoading || isSaving || isDrawing || isPanning}}">取色器</button>
+      <button class="brush-tool {{brushTool === 'move' ? 'brush-active' : ''}}" data-tool="move" bindtap="changeBrushTool" disabled="{{drawerOpen || isLoading || isSaving || isDrawing || isPanning}}">移动</button>
+      <button class="undo-button" bindtap="undoStroke" disabled="{{!strokeCount || drawerOpen || isLoading || isSaving || isDrawing || isPanning}}">撤销</button>
+    </view>
+    <view class="paint-color"><view class="color-sample" style="background: {{brushColor}};"></view><text>画笔颜色</text><text class="color-hex">{{brushColor}}</text></view>
+    <view wx:if="{{brushTool === 'picker'}}" class="brush-note">点击效果图取色，随后自动切换到绘画。</view>
+    <view class="brush-radius-label"><text>笔刷半径</text><text class="setting-value">{{brushRadius}} px</text></view>
+    <slider class="brush-slider" min="1" max="40" step="1" value="{{brushRadius}}" block-size="24" activeColor="#0064D9" backgroundColor="#E5E5EA" block-color="#0064D9" disabled="{{brushTool === 'move' || brushTool === 'picker' || drawerOpen || isLoading || isSaving || isDrawing || isPanning}}" bindchange="changeBrushRadius" />
+    <view class="brush-note">放大后选「移动」查看细节，再切换画笔修整。擦除变透明，还原恢复原图；绘画用取样颜色覆盖，并非 AI 修复。缩放不改变导出尺寸。</view>
+  </view>
+
+  <view class="settings-card">
+    <view class="setting-heading"><text class="section-title">自动去白</text><text class="setting-value">强度 {{tolerance}}</text></view>
+    <slider class="strength-slider" min="0" max="100" step="1" value="{{tolerance}}" block-size="24" activeColor="#0064D9" backgroundColor="#E5E5EA" block-color="#0064D9" disabled="{{drawerOpen || isLoading || isSaving || isDrawing || isPanning}}" bindchange="changeTolerance" />
+    <view class="slider-labels"><text>精细保留</text><text>移除更多近白色</text></view>
+    <view class="mode-setting">
+      <view class="mode-copy"><view class="mode-title">全图去白</view><view class="mode-note">{{mode === 'all' ? '同时去除主体内部白色，请检查预览。' : '仅移除与图片边缘相连的白底。'}}</view></view>
+      <switch checked="{{mode === 'all'}}" color="#34C759" disabled="{{drawerOpen || isLoading || isSaving || isDrawing || isPanning}}" bindchange="changeMode" />
+    </view>
+  </view>
+
+  <view class="status-row"><view class="status-dot {{isLoading ? 'busy-dot' : ''}}"></view><text>{{statusText}}</text></view>
+  <view class="result-detail" wx:if="{{hasEditable}}">自动去白 {{removedPercent}}% · {{strokeCount}} 笔修整 · {{imageSize}} PNG</view>
+  <view class="resize-note" wx:if="{{wasResized}}">为保证处理流畅，已将图片长边缩小至 2048 像素。</view>
+  <view class="error-note" wx:if="{{errorText}}">{{errorText}}</view>
+  <button wx:if="{{needsAlbumPermission}}" class="permission-button" open-type="openSetting" bindopensetting="onAlbumSetting">开启相册权限</button>
+  <view class="footnote"><text>图片在本机处理，无需上传。</text><button class="privacy-button" bindtap="showPrivacy">隐私说明</button></view>
+
+  <view class="action-bar">
+    <button class="choose-again" disabled="{{drawerOpen || isLoading || isSaving || isDrawing || isPanning}}" bindtap="chooseImage">{{originalPath ? '更换图片' : '选择图片'}}</button>
+    <button class="save-button" disabled="{{(!resultPath && !hasEditable) || drawerOpen || isLoading || isSaving || isDrawing || isPanning}}" loading="{{isLoading || isSaving}}" bindtap="saveImage">{{isLoading ? '处理中' : '保存透明 PNG'}}</button>
+  </view>
+</view>
+<canvas type="2d" id="processing-canvas" class="processing-canvas"></canvas>

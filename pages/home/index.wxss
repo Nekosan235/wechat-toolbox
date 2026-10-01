@@ -1,0 +1,23 @@
+.home { box-sizing: border-box; padding: 12px 20px 32px; padding-bottom: calc(32px + env(safe-area-inset-bottom)); max-width: 680px; margin: 0 auto; }
+.home-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand { font-size: 15px; font-weight: 500; color: #636366; }
+button.privacy:not([size="mini"]) { width: auto; }
+.privacy { flex: 0 0 auto; margin: 0 -8px 0 0; padding: 0 8px; color: #0064d9; background: transparent; font-size: 15px; min-height: 44px; line-height: 44px; border-radius: 12px; }
+.title { margin-top: 28px; font-size: 34px; font-weight: 700; letter-spacing: -.8px; }
+.subtitle { font-size: 17px; color: #636366; line-height: 1.5; margin-top: 8px; }
+.section-label { font-size: 14px; color: #636366; margin: 38px 12px 10px; }
+.tools { border-radius: 20px; overflow: hidden; background: #fff; }
+/* Outrank WeChat's fixed-width default button rule, not just a class selector. */
+button.tool-row:not([size="mini"]) { box-sizing: border-box; width: 100%; }
+.tool-row { display: flex; align-items: center; text-align: left; gap: 16px; min-height: 110px; padding: 22px 18px; margin: 0; border-radius: 0; background: #fff; line-height: normal; border-bottom: .5px solid #e5e5ea; color: #1c1c1e; }
+.tool-row:last-child { border-bottom: none; }
+.format { width: 52px; height: 52px; line-height: 52px; border-radius: 14px; flex-shrink: 0; color: #0064d9; background: #edf3ff; text-align: center; font-size: 14px; font-weight: 600; }
+.tool-copy { flex: 1; min-width: 0; }
+.tool-title { font-size: 20px; font-weight: 600; }
+.tool-note { font-size: 14px; color: #636366; line-height: 1.55; margin-top: 7px; white-space: normal; }
+.chevron { flex-shrink: 0; font-size: 30px; color: #636366; }
+.local-note { font-size: 14px; color: #636366; line-height: 1.7; margin: 18px 12px; }
+.more { margin-top: 42px; }
+.more-note { font-size: 14px; color: #636366; text-align: center; margin-top: 12px; }
+.footer { text-align: center; margin-top: 72px; font-size: 14px; color: #636366; }
+.pressed { background: #e9e9ee; }

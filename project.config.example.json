@@ -1,0 +1,39 @@
+{
+  "compileType": "miniprogram",
+  "libVersion": "3.17.3",
+  "packOptions": {
+    "ignore": [
+      { "type": "folder", "value": "tests" },
+      { "type": "file", "value": "README.md" },
+      { "type": "file", "value": "DESIGN.md" },
+      { "type": "file", "value": "CONTRIBUTING.md" },
+      { "type": "file", "value": "LICENSE" },
+      { "type": "file", "value": "project.config.example.json" }
+    ],
+    "include": []
+  },
+  "setting": {
+    "coverView": true,
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "enhance": true,
+    "showShadowRootInWxmlPanel": true,
+    "packNpmRelationList": [],
+    "babelSetting": { "ignore": [], "disablePlugins": [], "outputPath": "" },
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "minifyWXSS": true,
+    "localPlugins": false,
+    "condition": false,
+    "compileWorklet": false,
+    "disableUseStrict": false,
+    "minifyWXML": true,
+    "useCompilerPlugins": false
+  },
+  "condition": {},
+  "editorSetting": { "tabIndent": "auto", "tabSize": 2 },
+  "appid": "touristappid",
+  "simulatorPluginLibVersion": {}
+}

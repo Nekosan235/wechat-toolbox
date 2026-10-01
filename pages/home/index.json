@@ -1,0 +1,4 @@
+{
+  "navigationBarTitleText": "小猫拌饭的工具箱",
+  "usingComponents": { "tool-drawer": "/components/tool-drawer/index" }
+}
